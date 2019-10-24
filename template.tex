@@ -1,0 +1,140 @@
+\documentclass{article}
+
+
+\usepackage{arxiv}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{lipsum}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\title{Fairness in Knapsack}
+
+
+\author{
+  Xiang Liu \\
+  Department of Computer Science\\
+  Southeast University\\
+  Nanjing, China\\
+  \texttt{xiangliu@seu.edu.cn} 
+  %% examples of more authors
+%   \And
+%  Elias D.~Striatum \\
+%   Department of Electrical Engineering\\
+%   Mount-Sheikh University\\
+%   Santa Narimana, Levand \\
+%   \texttt{stariate@ee.mount-sheikh.edu} \\
+  %% \AND
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+  %% \And
+  %% Coauthor \\
+  %% Affiliation \\
+  %% Address \\
+  %% \texttt{email} \\
+}
+
+\begin{document}
+\maketitle
+
+\iffalse
+\begin{abstract}
+\lipsum[1]
+\end{abstract}
+\fi
+
+\iffalse
+% keywords can be removed
+\keywords{First keyword \and Second keyword \and More}
+\fi
+
+\section{Fairness}
+We consider a setting in one-sided markets (similar to knapsack setting) where there are a buyer with budget constraint $B$ and $n$ sellers $S=\{s_1,s_2,...,s_n\}$. Each seller owns a single item with public value $v_i$ (first assume $v_i=1,\forall{i\in S}$) and private cost $c_i$. Let $V\{v_1,v_2,...,v_n\}$ and $C=\{c_1,c_2,...,c_n\}$ denote the value vector and cost vector. These items can be divided into $m$ disjoint groups. Assume that there are $m$ groups $G=\{G_1,G_2,...,G_m\}$ and $\uplus_{j\le m}G_j=S$. 
+
+\subsection{Auction Model}
+Each seller needs to report their private information cost $b_i$ to the platform when he entering the markets. We assume that each seller is strategic that he reports false information to achieve more utilities, i.e., $b_i\neq c_i$. Let $b=\{b_1,b_2,...,b_n\}$ denote the bid profile. After bidding their costs, the platform needs to decide  winning sellers $S_w\subseteq S$ and pay each winning seller a reward $p_i>0 (i\in S_w)$. The utility of each seller is its payment minus its cost, $u_i=p_i-c_i$. The revenue of buyer is total value procured from sellers $u_b=\sum_{i\in S_w}v_i$. Our goal is to maximize the revenue (or the social welfare) that the total value procured from sellers. 
+
+\subsection{Desired Properties}
+We want to design the mechanism which guarantees following properties:
+\begin{itemize}
+    \item Fairness: We want to maximize the revenue with the consideration of fairness in each group.  A natural fairness objective function is: 
+    \begin{equation}{\label{fairness-value}}
+        \max\min_{j\le m} \frac{|S_w\cap G_j|}{|G_j|}
+    \end{equation}
+    Inspired by the method in previous work, we can solve this fairness problem by transferring it to a submodular function:
+    \begin{equation}\label{submodular}
+        \max \sum_{j\le m}   \sqrt{{|S_w\cap G_j|}}\ s.t. \ \sum_{i\in S_w}p_i\le B
+    \end{equation}
+    or 
+    \begin{equation}
+        \max \sum_{j\le m}   \log({{|S_w\cap G_j|}})\ s.t. \ \sum_{i\in S_w}p_i\le B
+    \end{equation}
+    However, for the additive value function, the revenue may perform bad in (\ref{submodular}) with the budget constraint. (It is a possible reason why we consider fairness from budget) Thus, from another aspect, we hope that the group with more sellers and higher average cost should consume more budget than others which is also helpful for the fairness in (\ref{fairness-value}).
+    \item Truthfulness: Each seller can get maximum utility by bidding truthful cost, i.e., $u_i(c_i,b_{-i})\ge u_i(b_i,b_{-i}),b_i\neq c_i$.
+    \item Budget Feasibility: The sum of payments of all the sellers does not exceed the budget constraint, i.e., $\sum_{i\in S}p_i\le B$.
+    \item Individual Rationality: The utility of each seller is non-negative, i.e., $u_i\ge 0$.
+\end{itemize}
+
+\subsection{Possible Mechanism}
+At the beginning, we need to divide all the budget $B$ into different groups based on the number of sellers in each group and sellers' costs. Assume that,  the budget for group $G_j$ is $B_j$. We consider this problem with the large markets assumption where the cost of each seller satisfies $c_i\ll B$ and there are adequate sellers in each group. We divide the budget into groups by the proportion of costs:
+\begin{equation}
+    B_j=\frac{B}{\sum_{i\in S}b_i}\cdot \sum_{i\in G_j}b_i
+\end{equation}
+In this way, the seller can manipulate the auction by bidding false cost and effect the budget allocation. Thus, in group $G_i$, we use the sample method to divide sellers into two partitions $G_i^A$ and $G_i^B$, randomly. Thus, we calculate the budget $B_i$ by the proportion of total costs, i.e.,
+
+\begin{equation}
+    B_j=\frac{B}{\sum_{j\le M}\sum_{i\in G_j^A}b_i}\cdot \sum_{i\in G_i^A}b_i
+\end{equation}.
+
+
+Within each group $G_j$, we use the greedy algorithm to select winning sellers among $G_j^B$ and adopt budget feasible mechanism to decide the final payment for each winning seller with the budget constraint $B_j$.
+ 
+\section{Another Idea}
+Last time, we also talk about another  problem that additional requirement for  group $G_i$ is that a fixed number $N_i$ of sellers (items) should be selected, $|S_w\cap G_i|\ge N_i$.***
+
+
+\bibliographystyle{unsrt}  
+%\bibliography{references}  %%% Remove comment to use the external .bib file (using bibtex).
+%%% and comment out the ``thebibliography'' section.
+
+
+%%% Comment out this section when you \bibliography{references} is enabled.
+\begin{thebibliography}{1}
+
+\bibitem{kour2014real}
+George Kour and Raid Saabne.
+\newblock Real-time segmentation of on-line handwritten arabic script.
+\newblock In {\em Frontiers in Handwriting Recognition (ICFHR), 2014 14th
+  International Conference on}, pages 417--422. IEEE, 2014.
+
+\bibitem{kour2014fast}
+George Kour and Raid Saabne.
+\newblock Fast classification of handwritten on-line arabic characters.
+\newblock In {\em Soft Computing and Pattern Recognition (SoCPaR), 2014 6th
+  International Conference of}, pages 312--318. IEEE, 2014.
+
+\bibitem{hadash2018estimate}
+Guy Hadash, Einat Kermany, Boaz Carmeli, Ofer Lavi, George Kour, and Alon
+  Jacovi.
+\newblock Estimate and replace: A novel approach to integrating deep neural
+  networks with existing applications.
+\newblock {\em arXiv preprint arXiv:1804.09028}, 2018.
+
+\end{thebibliography}
+
+
+\end{document}
